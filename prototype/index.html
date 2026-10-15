@@ -1,0 +1,569 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Alive &amp; Well</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
+<style>
+/* Layout: one calm column; the check-in screen leads with two big buttons, setup lives in tabs below the header. */
+:root{
+  --bg:#EEF3F1; --surface:#FFFFFF; --sunk:#E3EBE8; --ink:#13231F; --muted:#4A5C57; --line:#C6D4CE;
+  --ok:#1E6A4E; --ok-ink:#FFFFFF; --ok-soft:#DCEDE5;
+  --help:#B2361D; --help-ink:#FFFFFF; --help-soft:#F6E1DA;
+  --late:#8A5A00; --late-soft:#F5E9CF;
+  --accent:#2B5C88; --focus:#2B5C88;
+  --font-display:"Newsreader", Georgia, "Times New Roman", serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1916; --surface:#162420; --sunk:#1C2D28; --ink:#E5EEEA; --muted:#A2B4AD; --line:#2D403A;
+  --ok:#3E9F78; --ok-ink:#04130D; --ok-soft:#173329;
+  --help:#E0694E; --help-ink:#1A0703; --help-soft:#3A1E17;
+  --late:#E1B04E; --late-soft:#332811;
+  --accent:#8CB7DF; --focus:#8CB7DF; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0E1916; --surface:#162420; --sunk:#1C2D28; --ink:#E5EEEA; --muted:#A2B4AD; --line:#2D403A;
+  --ok:#3E9F78; --ok-ink:#04130D; --ok-soft:#173329;
+  --help:#E0694E; --help-ink:#1A0703; --help-soft:#3A1E17;
+  --late:#E1B04E; --late-soft:#332811;
+  --accent:#8CB7DF; --focus:#8CB7DF; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:18px;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:20px 48px}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--font-display);font-weight:600;font-size:1.35rem;letter-spacing:.005em}
+.today{color:var(--muted);font-size:.95rem}
+nav.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--sunk);padding:4px;border-radius:12px}
+nav.tabs button{font:inherit;font-size:.95rem;font-weight:700;color:var(--muted);background:transparent;border:0;border-radius:9px;padding:10px 4px;cursor:pointer;min-height:44px}
+nav.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+h1,h2{font-family:var(--font-display);font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:clamp(1.9rem,6vw,2.5rem);line-height:1.15}
+h2{font-size:1.4rem}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+.notice{background:var(--sunk);border-radius:var(--r);padding:12px 16px;font-size:.95rem}
+.notice.warn{background:var(--late-soft)}
+.notice.bad{background:var(--help-soft)}
+
+/* Check-in */
+.status{display:flex;flex-direction:column;gap:6px}
+.status .line{font-size:1.15rem}
+.big{display:flex;flex-direction:column;gap:14px}
+.btn-ok{background:var(--ok);color:var(--ok-ink);border:0;border-radius:22px;padding:28px 20px;font-size:clamp(2rem,9vw,2.8rem);font-weight:700;cursor:pointer;min-height:120px;display:flex;align-items:center;justify-content:center;gap:16px;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+.btn-ok svg{width:1.1em;height:1.1em;flex:none}
+.btn-help{background:var(--surface);color:var(--help);border:3px solid var(--help);border-radius:18px;padding:16px 20px;font-size:1.45rem;font-weight:700;cursor:pointer;min-height:72px}
+.btn-ok:active,.btn-help:active{transform:translateY(1px)}
+label.note{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:1rem}
+textarea,input[type=text],input[type=email],input[type=tel],input[type=time],select{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-height:48px}
+textarea{min-height:72px;resize:vertical}
+.confirm{background:var(--help-soft);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:14px}
+.confirm .row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer;min-height:48px;font-size:1rem}
+.btn.primary{background:var(--accent);color:var(--surface)}
+.btn.danger{background:var(--help);color:var(--help-ink)}
+.btn.plain{background:var(--surface);color:var(--ink);border:2px solid var(--line)}
+.btn.link{background:none;color:var(--accent);padding:8px 6px;min-height:40px;text-decoration:underline;text-underline-offset:3px}
+.done{background:var(--ok-soft);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:8px}
+.done.helpdone{background:var(--help-soft)}
+.done h2{font-size:1.6rem}
+.sos{border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:10px}
+.sos strong{font-size:1.1rem}
+.callist{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.callist li{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.callist .num{font-variant-numeric:tabular-nums;font-weight:700;user-select:all}
+.today-list{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.today-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.today-list li:last-child{border-bottom:0}
+
+/* Pills */
+.pill{display:inline-block;font-size:.82rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.help{background:var(--help-soft);color:var(--help)}
+.pill.late{background:var(--late-soft);color:var(--late)}
+.pill.wait{background:var(--sunk);color:var(--muted)}
+
+/* Setup panels */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:14px}
+.list{display:flex;flex-direction:column;margin:0;padding:0;list-style:none}
+.list > li{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.list > li:first-child{padding-top:0}
+.list > li:last-child{border-bottom:0;padding-bottom:0}
+.list .meta{display:flex;flex-direction:column;gap:2px;min-width:0}
+.list .meta b{font-size:1.05rem}
+.list .meta span{color:var(--muted);font-size:.92rem;overflow-wrap:anywhere}
+.list .acts{display:flex;gap:4px;flex:none;flex-wrap:wrap;justify-content:flex-end}
+.time-big{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.25rem}
+form.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+form.grid .full{grid-column:1/-1}
+form.grid label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.95rem;min-width:0}
+.check{flex-direction:row!important;align-items:center;gap:10px!important;font-weight:400!important}
+.check input{width:24px;height:24px;accent-color:var(--ok)}
+.formacts{display:flex;gap:10px;flex-wrap:wrap}
+.empty{color:var(--muted);padding:6px 0}
+.hist li{align-items:center}
+.hist .when{font-variant-numeric:tabular-nums}
+@media (max-width:480px){form.grid{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">Alive &amp; Well</div>
+    <div class="today" id="today"></div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="tab-checkin" aria-selected="true" data-tab="checkin">Check in</button>
+    <button role="tab" id="tab-people" aria-selected="false" data-tab="people">People</button>
+    <button role="tab" id="tab-schedule" aria-selected="false" data-tab="schedule">Schedule</button>
+    <button role="tab" id="tab-history" aria-selected="false" data-tab="history">History</button>
+  </nav>
+
+  <div id="banner" class="notice" hidden></div>
+
+  <!-- CHECK IN -->
+  <section id="view-checkin" class="wrap" style="gap:22px">
+    <div class="status">
+      <h1 id="greet">Hello</h1>
+      <p class="line" id="statusLine">Loading your check-in times…</p>
+    </div>
+
+    <div id="askArea" class="big">
+      <button class="btn-ok" id="okBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>
+        I'm OK
+      </button>
+      <label class="note" for="noteInput">Add a note (optional)
+        <textarea id="noteInput" placeholder="For example: going to the doctor this afternoon"></textarea>
+      </label>
+      <button class="btn-help" id="helpBtn" type="button">I need help</button>
+    </div>
+
+    <div id="confirmHelp" class="confirm" hidden>
+      <h2>Send a help alert?</h2>
+      <p id="confirmWho">Your contacts will get an email right away.</p>
+      <div class="row">
+        <button class="btn danger" id="helpYes" type="button">Yes, send help alert</button>
+        <button class="btn plain" id="helpNo" type="button">Cancel</button>
+      </div>
+    </div>
+
+    <div id="doneOk" class="done" hidden>
+      <h2>Thank you. You're checked in.</h2>
+      <p id="doneOkText"></p>
+      <div><button class="btn link" type="button" id="againBtn">Back to check-in</button></div>
+    </div>
+
+    <div id="doneHelp" class="done helpdone" hidden>
+      <h2>Your help request is saved.</h2>
+      <p id="doneHelpText"></p>
+      <div><button class="btn link" type="button" id="againBtn2">Back to check-in</button></div>
+    </div>
+
+    <div class="panel" id="todayPanel">
+      <h2 style="font-size:1.15rem">Today's check-ins</h2>
+      <ul class="today-list" id="todayList"><li class="empty">No check-in times set yet. Add them under Schedule.</li></ul>
+    </div>
+
+    <div class="sos">
+      <strong>In an emergency, call 911.</strong>
+      <p class="muted small" id="sosNote">This app sends email alerts. It is not a medical alert service.</p>
+      <ul class="callist" id="callList"></ul>
+    </div>
+  </section>
+
+  <!-- PEOPLE -->
+  <section id="view-people" class="wrap" hidden>
+    <div class="panel">
+      <h2>Who is checking in</h2>
+      <form id="nameForm" class="grid">
+        <label class="full" for="seniorName">Their first name, shown in greetings and alert emails
+          <input type="text" id="seniorName" autocomplete="off" placeholder="For example: Margaret">
+        </label>
+        <div class="formacts full"><button class="btn primary" type="submit">Save name</button><span class="muted small" id="nameSaved" aria-live="polite"></span></div>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2>Family &amp; friends</h2>
+      <p class="muted small">Everyone here is emailed when a check-in is missed or help is requested. Routine "I'm OK" emails go only to people who turn them on.</p>
+      <ul class="list" id="contactList"></ul>
+    </div>
+
+    <div class="panel">
+      <h2 id="contactFormTitle">Add a person</h2>
+      <form id="contactForm" class="grid" novalidate>
+        <label for="cName">Name<input type="text" id="cName" required autocomplete="off"></label>
+        <label for="cRel">Relationship<input type="text" id="cRel" placeholder="Daughter, neighbour…" autocomplete="off"></label>
+        <label for="cEmail">Email<input type="email" id="cEmail" required autocomplete="off"></label>
+        <label for="cPhone">Phone<input type="tel" id="cPhone" autocomplete="off"></label>
+        <label class="full check" for="cNotify"><input type="checkbox" id="cNotify" checked> Also email them every time a check-in says "I'm OK"</label>
+        <p class="full small" id="contactErr" style="color:var(--help)" aria-live="polite"></p>
+        <div class="formacts full">
+          <button class="btn primary" type="submit" id="contactSave">Add person</button>
+          <button class="btn plain" type="button" id="contactCancel" hidden>Cancel</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- SCHEDULE -->
+  <section id="view-schedule" class="wrap" hidden>
+    <div class="panel">
+      <h2>Check-in times</h2>
+      <p class="muted small">If nobody checks in within an hour of a time below, everyone in People gets an email. Checking in up to two hours early counts.</p>
+      <ul class="list" id="scheduleList"></ul>
+    </div>
+    <div class="panel">
+      <h2 id="schedFormTitle">Add a check-in time</h2>
+      <form id="schedForm" class="grid" novalidate>
+        <label class="full" for="sLabel">Name<input type="text" id="sLabel" placeholder="Morning check-in" autocomplete="off"></label>
+        <label for="sTime">Time<input type="time" id="sTime" value="09:00"></label>
+        <label for="sFreq">How often
+          <select id="sFreq">
+            <option value="daily">Every day</option>
+            <option value="weekdays">Weekdays (Mon–Fri)</option>
+            <option value="weekends">Weekends (Sat–Sun)</option>
+            <option value="weekly">Once a week</option>
+          </select>
+        </label>
+        <label for="sDay" id="sDayWrap" hidden>Day
+          <select id="sDay">
+            <option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option>
+            <option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option>
+          </select>
+        </label>
+        <label class="full check" for="sActive"><input type="checkbox" id="sActive" checked> Active</label>
+        <p class="full small" id="schedErr" style="color:var(--help)" aria-live="polite"></p>
+        <div class="formacts full">
+          <button class="btn primary" type="submit" id="schedSave">Add time</button>
+          <button class="btn plain" type="button" id="schedCancel" hidden>Cancel</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="view-history" class="wrap" hidden>
+    <div class="panel">
+      <h2>Recent check-ins</h2>
+      <ul class="list hist" id="historyList"><li class="empty">No check-ins yet.</li></ul>
+    </div>
+    <div class="panel">
+      <h2 style="font-size:1.15rem">How alerts work</h2>
+      <p class="small">Once an hour, Alive &amp; Well looks for missed check-ins and unsent alerts and emails the people listed under People. When "I need help" is pressed by someone who has Gmail connected to Claude, the email goes out immediately. Otherwise it goes out at the next hourly run, so call 911 in an emergency.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+  const S = { settings:{}, contacts:[], schedules:[], checkins:[], db:null, user:null, uid:null, canWrite:true, loaded:{c:false,s:false,k:false} };
+  const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const fmtTime = (d) => d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+  const fmtDay = (d) => d.toLocaleDateString([], {weekday:"long", month:"long", day:"numeric"});
+  const fmtShort = (d) => d.toLocaleDateString([], {weekday:"short", month:"short", day:"numeric"});
+  const HOUR = 3600e3, EARLY = 2*HOUR, GRACE = HOUR, COVER_AFTER = 4*HOUR;
+
+  function el(tag, attrs, ...kids){
+    const n = document.createElement(tag);
+    if (attrs) for (const k in attrs){ if (k === "class") n.className = attrs[k]; else if (k === "text") n.textContent = attrs[k]; else if (k.startsWith("on")) n.addEventListener(k.slice(2), attrs[k]); else n.setAttribute(k, attrs[k]); }
+    for (const c of kids) if (c != null) n.append(c);
+    return n;
+  }
+  function banner(msg, kind){ const b = $("banner"); if (!msg){ b.hidden = true; return; } b.textContent = msg; b.className = "notice" + (kind ? " " + kind : ""); b.hidden = false; }
+  function name(){ return (S.settings.senior_name || "").trim(); }
+  function timeLabel(hhmm){ const [h,m] = String(hhmm||"0:0").split(":").map(Number); const d = new Date(); d.setHours(h||0, m||0, 0, 0); return fmtTime(d); }
+  function freqLabel(s){ if (s.frequency === "weekdays") return "Weekdays"; if (s.frequency === "weekends") return "Weekends"; if (s.frequency === "weekly") return "Every " + DAYS[Number(s.day ?? 1)]; return "Every day"; }
+
+  /* ---------- Tabs ---------- */
+  document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+  function showTab(t){
+    document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
+    ["checkin","people","schedule","history"].forEach(v => $("view-" + v).hidden = v !== t);
+  }
+
+  /* ---------- Schedule logic (mirrors the hourly alert task) ---------- */
+  function occursOn(s, d){
+    const wd = d.getDay();
+    if (s.frequency === "weekdays") return wd >= 1 && wd <= 5;
+    if (s.frequency === "weekends") return wd === 0 || wd === 6;
+    if (s.frequency === "weekly") return wd === Number(s.day ?? 1);
+    return true;
+  }
+  function occurrenceAt(s, d){ const [h,m] = String(s.time||"0:0").split(":").map(Number); const t = new Date(d); t.setHours(h||0, m||0, 0, 0); return t; }
+  function todaysOccurrences(now){
+    return S.schedules.filter(s => s.is_active !== false && occursOn(s, now))
+      .map(s => ({ s, t: occurrenceAt(s, now) })).sort((a,b) => a.t - b.t);
+  }
+  function responsesBetween(a, b){
+    return S.checkins.filter(c => (c.status === "ok" || c.status === "need_help") && c.at && new Date(c.at) >= a && new Date(c.at) <= b);
+  }
+  function occState(o, now){
+    const from = new Date(o.t - EARLY), to = new Date(+o.t + COVER_AFTER);
+    const hit = responsesBetween(from, to)[0];
+    if (hit) return { kind:"done", c:hit };
+    const missed = S.checkins.find(c => c.status === "no_response" && c.schedule_id === o.s.id && c.scheduled_time && Math.abs(new Date(c.scheduled_time) - o.t) < 60e3);
+    if (missed) return { kind:"missed" };
+    if (now < from) return { kind:"upcoming" };
+    if (now <= +o.t + GRACE) return { kind:"due" };
+    return { kind:"late" };
+  }
+  function currentOccurrence(now){
+    // The occurrence whose window holds "now", preferring the nearest one.
+    const list = todaysOccurrences(now).filter(o => now >= o.t - EARLY && now <= +o.t + COVER_AFTER);
+    list.sort((a,b) => Math.abs(now - a.t) - Math.abs(now - b.t));
+    return list[0] || null;
+  }
+
+  /* ---------- Render ---------- */
+  function renderCheckin(){
+    const now = new Date();
+    $("today").textContent = fmtDay(now);
+    const h = now.getHours();
+    const part = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+    $("greet").textContent = name() ? part + ", " + name() : part;
+
+    const occ = todaysOccurrences(now);
+    let line;
+    if (!S.loaded.s) line = "Loading your check-in times…";
+    else if (!S.schedules.length) line = "You can check in any time. Check-in times can be added under Schedule.";
+    else {
+      const due = occ.find(o => ["due","late"].includes(occState(o, now).kind));
+      const next = occ.find(o => occState(o, now).kind === "upcoming");
+      const last = [...occ].reverse().find(o => occState(o, now).kind === "done");
+      if (due) line = "It's time for your " + (due.s.label || "check-in") + ". Please tap I'm OK.";
+      else if (last && next) line = "You checked in at " + fmtTime(new Date(occState(last, now).c.at)) + ". Next: " + (next.s.label || "check-in") + " at " + fmtTime(next.t) + ".";
+      else if (last) line = "You checked in at " + fmtTime(new Date(occState(last, now).c.at)) + ". That's all for today.";
+      else if (next) line = "Your next check-in is " + (next.s.label || "check-in") + " at " + fmtTime(next.t) + ".";
+      else line = "No more check-ins today. You can still check in any time.";
+    }
+    $("statusLine").textContent = line;
+
+    const ul = $("todayList"); ul.replaceChildren();
+    if (!occ.length) ul.append(el("li", {class:"empty", text: S.schedules.length ? "No check-ins scheduled today." : "No check-in times set yet. Add them under Schedule."}));
+    for (const o of occ){
+      const st = occState(o, now);
+      const pill = st.kind === "done" ? el("span", {class:"pill " + (st.c.status === "need_help" ? "help" : "ok"), text: st.c.status === "need_help" ? "Help asked " + fmtTime(new Date(st.c.at)) : "Done " + fmtTime(new Date(st.c.at))})
+        : st.kind === "missed" ? el("span", {class:"pill late", text:"Missed"})
+        : st.kind === "late" ? el("span", {class:"pill late", text:"Overdue"})
+        : st.kind === "due" ? el("span", {class:"pill wait", text:"Now"})
+        : el("span", {class:"pill wait", text:"Later"});
+      ul.append(el("li", null, el("span", null, el("span", {class:"time-big", text: fmtTime(o.t)}), document.createTextNode("  " + (o.s.label || "Check-in"))), pill));
+    }
+
+    const cl = $("callList"); cl.replaceChildren();
+    const withPhone = S.contacts.filter(c => (c.phone||"").trim());
+    if (withPhone.length){
+      $("sosNote").textContent = "This app sends email alerts. It is not a medical alert service. You can also call:";
+      for (const c of withPhone) cl.append(el("li", null, el("span", {text: c.name + (c.relationship ? " (" + c.relationship + ")" : "")}), el("span", {class:"num", text: c.phone})));
+    } else $("sosNote").textContent = "This app sends email alerts. It is not a medical alert service.";
+
+    $("confirmWho").textContent = S.contacts.length
+      ? "An email will go to " + listNames(S.contacts.map(c => c.name)) + "."
+      : "No one is listed under People yet, so no email can be sent. Please call 911 or a family member.";
+    $("helpYes").disabled = !S.contacts.length;
+  }
+  function listNames(a){ if (a.length <= 1) return a.join(""); return a.slice(0,-1).join(", ") + " and " + a[a.length-1]; }
+
+  function renderContacts(){
+    const ul = $("contactList"); ul.replaceChildren();
+    if (!S.contacts.length){ ul.append(el("li", {class:"empty", text:"No one added yet. Add the first person below."})); return; }
+    for (const c of [...S.contacts].sort((a,b) => (a.name||"").localeCompare(b.name||""))){
+      const sub = [c.relationship, c.email, c.phone].filter(Boolean).join(" · ");
+      ul.append(el("li", null,
+        el("div", {class:"meta"}, el("b", {text:c.name}), el("span", {text: sub}), el("span", {text: c.notify_on_checkin !== false ? "Gets every check-in" : "Alerts only"})),
+        el("div", {class:"acts"}, el("button", {class:"btn link", type:"button", text:"Edit", onclick: () => editContact(c)}), deleteBtn("contacts", c.id))
+      ));
+    }
+  }
+  function renderSchedules(){
+    const ul = $("scheduleList"); ul.replaceChildren();
+    if (!S.schedules.length){ ul.append(el("li", {class:"empty", text:"No check-in times yet. Add one below."})); return; }
+    for (const s of [...S.schedules].sort((a,b) => String(a.time).localeCompare(String(b.time)))){
+      ul.append(el("li", null,
+        el("div", {class:"meta"}, el("b", null, el("span", {class:"time-big", text: timeLabel(s.time)}), document.createTextNode("  " + (s.label || "Check-in"))), el("span", {text: freqLabel(s) + (s.is_active === false ? " · Paused" : "")})),
+        el("div", {class:"acts"}, el("button", {class:"btn link", type:"button", text:"Edit", onclick: () => editSchedule(s)}), deleteBtn("schedules", s.id))
+      ));
+    }
+  }
+  function renderHistory(){
+    const ul = $("historyList"); ul.replaceChildren();
+    if (!S.checkins.length){ ul.append(el("li", {class:"empty", text:"No check-ins yet. They'll appear here after the first one."})); return; }
+    for (const c of S.checkins){
+      const when = new Date(c.at);
+      const pill = c.status === "ok" ? el("span", {class:"pill ok", text:"OK"}) : c.status === "need_help" ? el("span", {class:"pill help", text:"Needed help"}) : el("span", {class:"pill late", text:"Missed"});
+      const sent = (c.notified_contacts||[]).length;
+      const alert = c.alert_state === "sent" ? "Emailed " + sent + (sent === 1 ? " person" : " people") : c.alert_state === "pending" ? "Email going out within the hour" : c.alert_state === "no_contacts" ? "No one to email" : "";
+      ul.append(el("li", null,
+        el("div", {class:"meta"}, el("b", {class:"when", text: fmtShort(when) + ", " + fmtTime(when)}), c.message ? el("span", {text: "“" + c.message + "”"}) : null, alert ? el("span", {text: alert}) : null),
+        pill));
+    }
+  }
+  function renderAll(){ renderCheckin(); renderContacts(); renderSchedules(); renderHistory(); }
+
+  function deleteBtn(col, id){
+    let armed = false, timer;
+    const b = el("button", {class:"btn link", type:"button", text:"Delete"});
+    b.addEventListener("click", async () => {
+      if (!armed){ armed = true; b.textContent = "Tap again to delete"; b.style.color = "var(--help)"; timer = setTimeout(() => { armed = false; b.textContent = "Delete"; b.style.color = ""; }, 4000); return; }
+      clearTimeout(timer);
+      try { await S.db.collection(col).doc(id).delete(); } catch(e){ writeFailed(e); }
+    });
+    return b;
+  }
+  function writeFailed(e){
+    if (e && e.code === "invalid_argument"){ S.canWrite = false; banner("You can view this page but not change it. Ask the owner to share it with you as a Contributor or Editor.", "warn"); }
+    else if (e && e.code === "quota_exceeded") banner("Storage is full. Delete some old entries and try again.", "bad");
+    else banner("That didn't save. Check your connection and try again.", "bad");
+  }
+
+  /* ---------- Contacts form ---------- */
+  let editingContact = null;
+  function editContact(c){
+    editingContact = c.id; $("contactFormTitle").textContent = "Edit " + c.name;
+    $("cName").value = c.name || ""; $("cRel").value = c.relationship || ""; $("cEmail").value = c.email || ""; $("cPhone").value = c.phone || ""; $("cNotify").checked = c.notify_on_checkin !== false;
+    $("contactSave").textContent = "Save changes"; $("contactCancel").hidden = false; $("cName").focus();
+  }
+  function resetContact(){ editingContact = null; $("contactForm").reset(); $("cNotify").checked = true; $("contactFormTitle").textContent = "Add a person"; $("contactSave").textContent = "Add person"; $("contactCancel").hidden = true; $("contactErr").textContent = ""; }
+  $("contactCancel").addEventListener("click", resetContact);
+  $("contactForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const data = { name: $("cName").value.trim(), relationship: $("cRel").value.trim(), email: $("cEmail").value.trim(), phone: $("cPhone").value.trim(), notify_on_checkin: $("cNotify").checked };
+    if (!data.name || !data.email){ $("contactErr").textContent = "Add a name and an email address."; return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)){ $("contactErr").textContent = "That email address doesn't look complete. Check it and try again."; return; }
+    if (!S.db) return;
+    try {
+      if (editingContact) await S.db.collection("contacts").doc(editingContact).update(data);
+      else await S.db.collection("contacts").add({ ...data, created_at: new Date().toISOString() });
+      resetContact();
+    } catch(err){ writeFailed(err); }
+  });
+
+  /* ---------- Schedule form ---------- */
+  let editingSched = null;
+  $("sFreq").addEventListener("change", () => { $("sDayWrap").hidden = $("sFreq").value !== "weekly"; });
+  function editSchedule(s){
+    editingSched = s.id; $("schedFormTitle").textContent = "Edit " + (s.label || "check-in");
+    $("sLabel").value = s.label || ""; $("sTime").value = s.time || "09:00"; $("sFreq").value = s.frequency || "daily"; $("sDay").value = String(s.day ?? 1); $("sActive").checked = s.is_active !== false;
+    $("sDayWrap").hidden = $("sFreq").value !== "weekly";
+    $("schedSave").textContent = "Save changes"; $("schedCancel").hidden = false; $("sLabel").focus();
+  }
+  function resetSched(){ editingSched = null; $("schedForm").reset(); $("sTime").value = "09:00"; $("sActive").checked = true; $("sDayWrap").hidden = true; $("schedFormTitle").textContent = "Add a check-in time"; $("schedSave").textContent = "Add time"; $("schedCancel").hidden = true; $("schedErr").textContent = ""; }
+  $("schedCancel").addEventListener("click", resetSched);
+  $("schedForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const time = $("sTime").value;
+    if (!/^\d{2}:\d{2}$/.test(time)){ $("schedErr").textContent = "Choose a time."; return; }
+    const data = { label: $("sLabel").value.trim() || "Check-in", time, frequency: $("sFreq").value, day: Number($("sDay").value), is_active: $("sActive").checked };
+    if (!S.db) return;
+    try {
+      if (editingSched) await S.db.collection("schedules").doc(editingSched).update(data);
+      else await S.db.collection("schedules").add({ ...data, created_at: new Date().toISOString() });
+      resetSched();
+    } catch(err){ writeFailed(err); }
+  });
+
+  /* ---------- Name ---------- */
+  $("nameForm").addEventListener("submit", async (e) => {
+    e.preventDefault(); if (!S.db) return;
+    try { await S.db.doc("settings/main").set({ ...S.settings, senior_name: $("seniorName").value.trim() }); $("nameSaved").textContent = "Saved"; setTimeout(() => $("nameSaved").textContent = "", 2500); }
+    catch(err){ writeFailed(err); }
+  });
+
+  /* ---------- Check-in actions ---------- */
+  function showStage(stage){
+    $("askArea").hidden = stage !== "ask"; $("confirmHelp").hidden = stage !== "confirm";
+    $("doneOk").hidden = stage !== "ok"; $("doneHelp").hidden = stage !== "help";
+  }
+  $("againBtn").addEventListener("click", () => showStage("ask"));
+  $("againBtn2").addEventListener("click", () => showStage("ask"));
+  $("helpBtn").addEventListener("click", () => showStage("confirm"));
+  $("helpNo").addEventListener("click", () => showStage("ask"));
+
+  function baseRecord(status){
+    const now = new Date(), o = currentOccurrence(now);
+    return { status, message: $("noteInput").value.trim() || null, at: now.toISOString(), responded_at: now.toISOString(),
+      scheduled_time: o ? o.t.toISOString() : null, schedule_id: o ? o.s.id : null, created_by: S.uid || null, notified_contacts: [] };
+  }
+
+  $("okBtn").addEventListener("click", async () => {
+    if (!S.db){ banner("The app is still connecting. Try again in a moment.", "warn"); return; }
+    const rec = baseRecord("ok");
+    const routine = S.contacts.filter(c => c.notify_on_checkin !== false);
+    rec.alert_state = routine.length ? "pending" : "not_needed";
+    $("okBtn").disabled = true;
+    try {
+      await S.db.collection("checkins").add(rec);
+      $("noteInput").value = "";
+      $("doneOkText").textContent = "Saved at " + fmtTime(new Date(rec.at)) + "." + (routine.length ? " " + listNames(routine.map(c => c.name)) + (routine.length === 1 ? " gets" : " get") + " an email within the hour." : "");
+      showStage("ok");
+    } catch(err){ writeFailed(err); }
+    finally { $("okBtn").disabled = false; }
+  });
+
+  $("helpYes").addEventListener("click", async () => {
+    if (!S.db){ banner("The app is still connecting. Please call 911 or a family member.", "bad"); return; }
+    const rec = baseRecord("need_help"); rec.alert_state = "pending";
+    $("helpYes").disabled = true;
+    let ref;
+    try { ref = await S.db.collection("checkins").add(rec); $("noteInput").value = ""; }
+    catch(err){ writeFailed(err); $("helpYes").disabled = false; return; }
+
+    const emails = S.contacts.map(c => c.email).filter(Boolean);
+    let text = "Email to " + listNames(S.contacts.map(c => c.name)) + " will go out within the hour. If you need help now, call 911.";
+    const mcp = await claude.use("mcp").catch(() => null);
+    if (mcp && emails.length){
+      $("doneHelpText").textContent = "Sending email now…"; showStage("help");
+      const who = name() || "Your family member";
+      const at = new Date(rec.at);
+      const body = who + " pressed \"I need help\" in Alive & Well at " + fmtTime(at) + " on " + fmtDay(at) + "." +
+        (rec.message ? "\n\nTheir note: " + rec.message : "") +
+        "\n\nPlease contact them right away. If you can't reach them, ask someone nearby to check on them or call 911." +
+        "\n\nSent by Alive & Well";
+      try {
+        await mcp.callTool("Gmail", "send_message", { to: emails, subject: "Help needed: " + who + " pressed \"I need help\"", body });
+        await ref.update({ alert_state: "sent", notified_contacts: emails, alerted_at: new Date().toISOString() }).catch(() => {});
+        text = "We emailed " + listNames(S.contacts.map(c => c.name)) + ". If you need help now, call 911.";
+      } catch(e){
+        const code = e && e.code;
+        if (code === "needs_reauth") text = "Gmail needs to be reconnected in Claude settings, so the email will go out within the hour instead. If you need help now, call 911.";
+        else if (code === "server_unavailable" || code === "upstream_error" || code === "cancelled") text = "The email may not have gone through, so it will be sent again within the hour. If you need help now, call 911.";
+      }
+    }
+    $("doneHelpText").textContent = text;
+    showStage("help");
+    $("helpYes").disabled = false;
+  });
+
+  /* ---------- Boot ---------- */
+  renderAll();
+  setInterval(renderCheckin, 60e3);
+
+  (async () => {
+    const db = await claude.use("db").catch(() => null);
+    if (!db){ banner("Sign in to Claude to use Alive & Well. Check-ins can't be saved right now.", "warn"); return; }
+    S.db = db;
+    const user = await claude.use("user").catch(() => null);
+    S.user = user;
+    if (user){
+      try { S.uid = await user.id(); } catch(e){}
+      try { const w = await user.can("data.write"); if (w === false){ S.canWrite = false; banner("You can view this page but not check in. Ask the owner to share it with you as a Contributor or Editor.", "warn"); } } catch(e){}
+    }
+    const fail = (e) => { if (e && e.code === "revoked") banner("This page is no longer available to you.", "warn"); };
+    db.doc("settings/main").onSnapshot(snap => { S.settings = snap.exists ? { ...snap.data() } : {}; if (document.activeElement !== $("seniorName")) $("seniorName").value = S.settings.senior_name || ""; renderCheckin(); }, fail);
+    db.collection("contacts").onSnapshot(q => { S.contacts = q.docs.map(d => ({ id: d.id, ...d.data() })); S.loaded.c = true; renderContacts(); renderCheckin(); }, fail);
+    db.collection("schedules").onSnapshot(q => { S.schedules = q.docs.map(d => ({ id: d.id, ...d.data() })); S.loaded.s = true; renderSchedules(); renderCheckin(); }, fail);
+    db.collection("checkins").orderBy("at", "desc").limit(60).onSnapshot(q => { S.checkins = q.docs.map(d => ({ id: d.id, ...d.data() })); S.loaded.k = true; renderHistory(); renderCheckin(); }, fail);
+  })();
+})();
+</script>
+
+</body></html>
