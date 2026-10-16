@@ -6,12 +6,19 @@ The app is built with Expo (React Native) for iPhone, Android and web, with Supa
 
 ## Status
 
-**Phase 1 (Foundations)** is done: the database tables and access rules, plus passwordless sign-in with a one-time code by email or text message. After signing in you see a placeholder screen; the check-in screen comes in Phase 2.
+- **Phase 1 (Foundations)** is done: the database tables and access rules, plus passwordless sign-in with a one-time code by email or text message.
+- **Phase 2 (Check-in app)** is done: the senior's check-in screen ("I'm OK", "I need help", a note, today's times, call buttons), the family's Today view, history, contacts, check-in times, and invite codes so the senior and family can each use their own phone.
+
+Text and email alerts come in Phase 3. Until then the app says plainly that help requests are only visible in the app (`ALERTS_LIVE` in `src/constants/features.ts`).
 
 ## Set up Supabase (one time, about 15 minutes)
 
 1. **Create the project.** Sign up at [supabase.com](https://supabase.com), create a new project, and choose **Canada (Central)** as the region so data stays in Canada. Save the database password somewhere safe.
-2. **Create the tables.** In the project, open **SQL Editor**, paste the whole of [`supabase/migrations/20261015000000_initial_schema.sql`](supabase/migrations/20261015000000_initial_schema.sql), and click **Run**.
+2. **Create the tables.** In the project, open **SQL Editor**. Paste the whole of each file in [`supabase/migrations/`](supabase/migrations/), oldest first, and click **Run** after each:
+   - `20261015000000_initial_schema.sql` (Phase 1)
+   - `20261016000000_invites.sql` (Phase 2: invite codes)
+
+   Each file only needs to be run once. When a later phase adds a new file, run just that one.
 3. **Make sign-in emails show a code.** Supabase's emails contain a link by default; this app needs the code instead. Go to **Authentication > Emails**. In both the **Magic Link** and **Confirm signup** templates, replace the body with something like:
 
    ```html
@@ -44,6 +51,7 @@ Then scan the QR code with the Camera app (iPhone) or the Expo Go app (Android),
 ```bash
 npm run typecheck   # TypeScript
 npm run lint        # ESLint
+npm test            # check-in timing, time zones, phone numbers
 npm run test:db     # database access rules, against a throwaway local Postgres
 ```
 

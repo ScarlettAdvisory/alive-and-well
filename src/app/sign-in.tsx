@@ -80,7 +80,7 @@ export default function SignInScreen() {
 
   if (!target) {
     return (
-      <Screen>
+      <Screen centered>
         <Label variant="title">Alive &amp; Well</Label>
         <Label variant="muted">
           Sign in with your email address or mobile number. We&apos;ll send you a code, so
@@ -105,7 +105,7 @@ export default function SignInScreen() {
 
   const where = describeSignInTarget(target);
   return (
-    <Screen>
+    <Screen centered>
       <Label variant="title">Enter your code</Label>
       <Label variant="muted">
         We sent a code to {where}. It can take a minute to arrive

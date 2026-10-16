@@ -157,5 +157,95 @@ do $$ begin
   end;
 end $$;
 
+-- Invites: Alice invites Margaret (who signs in on her own phone).
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-00000000000c', 'margaret@example.com');
+update public.profiles set display_name = 'Alice' where id = '00000000-0000-0000-0000-00000000000a';
+
+select pg_temp.act_as('00000000-0000-0000-0000-00000000000a');
+select public.create_invite(:'margaret', 'senior') as invite \gset
+select set_config('test.invite', :'invite', false);
+
+do $$ begin
+  if current_setting('test.invite') !~ '^[A-HJ-KM-NP-Z2-9]{8}$' then
+    raise exception 'FAIL: invite code has the wrong shape: %', current_setting('test.invite');
+  end if;
+  if (select count(*) from public.circle_invites) <> 1 then
+    raise exception 'FAIL: Alice can''t see her invite';
+  end if;
+end $$;
+
+-- Bob can't see Alice's invites or create invites for Margaret.
+reset role;
+select pg_temp.act_as('00000000-0000-0000-0000-00000000000b');
+do $$ begin
+  if exists (select 1 from public.circle_invites) then
+    raise exception 'FAIL: Bob sees another circle''s invites';
+  end if;
+  begin
+    perform public.create_invite(current_setting('test.margaret')::uuid, 'family');
+    raise exception 'FAIL: Bob created an invite for Margaret';
+  exception when insufficient_privilege then null;
+  end;
+  if exists (select 1 from public.circle_people(current_setting('test.margaret')::uuid)) then
+    raise exception 'FAIL: Bob can list Margaret''s circle';
+  end if;
+end $$;
+
+-- Margaret joins with the code, typed loosely (lowercase, with a space).
+reset role;
+select pg_temp.act_as('00000000-0000-0000-0000-00000000000c');
+select public.accept_invite(lower(substr(:'invite', 1, 4)) || ' ' || substr(:'invite', 5)) as joined \gset
+do $$ declare r record; begin
+  if current_setting('test.margaret') <> (select senior_id::text from public.circle_members limit 1) then
+    raise exception 'FAIL: Margaret did not join her circle';
+  end if;
+  if (select role from public.circle_members where user_id = '00000000-0000-0000-0000-00000000000c') <> 'senior' then
+    raise exception 'FAIL: Margaret joined with the wrong role';
+  end if;
+  if (select count(*) from public.contacts) <> 1 then
+    raise exception 'FAIL: Margaret can''t see her contacts after joining';
+  end if;
+  select string_agg(coalesce(display_name, '?') || ':' || role || ':' || is_me, ',' order by display_name nulls last) into r
+    from public.circle_people(current_setting('test.margaret')::uuid);
+  if r.string_agg <> 'Alice:family:false,?:senior:true' then
+    raise exception 'FAIL: circle_people returned %', r.string_agg;
+  end if;
+end $$;
+
+-- A used code can't be reused; an expired one doesn't work.
+reset role;
+select pg_temp.act_as('00000000-0000-0000-0000-00000000000b');
+do $$ begin
+  begin
+    perform public.accept_invite(current_setting('test.invite'));
+    raise exception 'FAIL: a used invite worked again';
+  exception when sqlstate 'PT404' then null;
+  end;
+  begin
+    perform public.accept_invite('ZZZZZZZZ');
+    raise exception 'FAIL: a made-up invite worked';
+  exception when sqlstate 'PT404' then null;
+  end;
+end $$;
+reset role;
+select pg_temp.act_as('00000000-0000-0000-0000-00000000000a');
+select public.create_invite(:'margaret', 'family') as invite2 \gset
+reset role;
+update public.circle_invites set expires_at = now() - interval '1 minute' where code = :'invite2';
+select set_config('test.invite2', :'invite2', false);
+select pg_temp.act_as('00000000-0000-0000-0000-00000000000b');
+do $$ begin
+  begin
+    perform public.accept_invite(current_setting('test.invite2'));
+    raise exception 'FAIL: an expired invite worked';
+  exception when sqlstate 'PT404' then null;
+  end;
+  if exists (select 1 from public.seniors where first_name = 'Margaret') then
+    raise exception 'FAIL: Bob got into Margaret''s circle';
+  end if;
+end $$;
+
 reset role;
 \echo 'All RLS tests passed.'

@@ -9,8 +9,10 @@ Senior check-in app: scheduled check-ins, a big "I'm OK" button, an "I need help
 - `PLAN.md`: the full plan for the standalone app (features, stack, costs, build phases, store/privacy/safety rules). Read it before starting new work.
 - `README.md`: Supabase setup steps and how to run the app.
 - `prototype/index.html`: the original Claude-hosted version, exported from claude.ai. It's the reference for screens, wording and behaviour. It depends on the claude.ai artifact runtime (`claude.use("db")`, `claude.use("mcp")`, `claude.use("user")`), so it won't run standalone.
-- `src/app/`: screens. `sign-in.tsx` is public; everything in `(app)/` needs a session (`Stack.Protected` in `src/app/_layout.tsx`).
-- `src/lib/supabase.ts`: the Supabase client. `src/lib/auth.tsx`: session context (`useAuth`).
+- `src/app/`: screens. `sign-in.tsx` is public; everything in `(app)/` needs a session (`Stack.Protected` in `src/app/_layout.tsx`). Inside, `(app)/_layout.tsx` shows `welcome.tsx` until the user is in a circle, then `(tabs)/` (Check in/Today, People, Schedule, History) plus modal forms (`contact/[id]`, `schedule/[id]`, `invite`, `senior`).
+- `src/lib/supabase.ts`: the Supabase client. `src/lib/auth.tsx`: session context (`useAuth`). `src/lib/circle.tsx`: loads the user's senior, contacts, schedules, check-ins and circle (`useCircle`), refreshing every minute and on focus; call `refresh()` after any write.
+- `src/lib/schedule.ts`: check-in timing in the senior's time zone (ported from the prototype). `src/lib/format.ts`: display formatting. Both have no imports so `npm test` runs them under plain Node.
+- `src/constants/features.ts`: `ALERTS_LIVE`. While false, all wording must say help requests and missed check-ins are only visible in the app.
 - `supabase/migrations/`: schema and RLS. `supabase/tests/rls_test.sql`: RLS tests run by `npm run test:db`.
 
 ## Stack
@@ -21,7 +23,7 @@ Senior check-in app: scheduled check-ins, a big "I'm OK" button, an "I need help
 
 ## Commands
 
-- `npm run typecheck`, `npm run lint`, `npm run test:db`. Run all three before calling work done.
+- `npm run typecheck`, `npm run lint`, `npm test`, `npm run test:db`. Run all four before calling work done.
 - Add packages with `npx expo install <pkg>`. If Expo's API is unreachable, look up the SDK-compatible version in `node_modules/expo/bundledNativeModules.json` and `npm install` that exact range.
 
 ## Data model (supabase/migrations)
@@ -30,6 +32,8 @@ Senior check-in app: scheduled check-ins, a big "I'm OK" button, an "I need help
 - Create a senior only through the `create_senior(first_name, timezone, role)` RPC, which also adds the caller to the circle.
 - `contacts`: alert recipients, no account needed. Phones are E.164. Texts need `sms_consent_at`.
 - `schedules`: `time_of_day` in the senior's timezone, frequency daily/weekdays/weekends/weekly, `day_of_week` 0=Sunday.
+- `circle_invites`: one-time 8-character codes (expire in 7 days) made with `create_invite(senior_id, role)` and redeemed with `accept_invite(code)`, which raises `PT404` (HTTP 404) for a bad code. `circle_people(senior_id)` lists names and roles in a circle.
+- `profiles.display_name`: the user's first name, asked on the welcome screen.
 - `checkins`: the app may only insert `ok`/`need_help`; a trigger forces `occurred_at`, `created_by` and `alert_state='pending'`. Rows are never updated or deleted by the app. The alert job (service role) records `no_response` rows, at most one per schedule occurrence, and updates alert fields.
 
 ## Behaviour to keep from the prototype
@@ -38,6 +42,12 @@ Senior check-in app: scheduled check-ins, a big "I'm OK" button, an "I need help
 - Routine "I'm OK" emails go only to contacts with notify_on_checkin on; missed-check-in and help alerts go to everyone.
 - The senior's screen always shows "In an emergency, call 911" and says this is not a medical alert service.
 - Large text, high contrast and big tap targets. The primary user is a senior.
+
+## Gotchas
+
+- The React Compiler is on. It can evaluate property reads inside callbacks while memoising, so never write `maybeUndefined!.id` in a handler; guard with `if (!x) return` first.
+- Times use `en-CA` formatting ("9:00 a.m."); wrap sentences that end with a time in `tidy()` to avoid "a.m..".
+- No native date picker: times are picked with `Choices` chips so it works the same on iOS, Android and web.
 
 ## Rules
 

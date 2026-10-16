@@ -29,7 +29,7 @@ function RootNavigator() {
 
   if (!isSupabaseConfigured) {
     return (
-      <Screen>
+      <Screen centered>
         <Label variant="title">Almost ready</Label>
         <Label>
           This copy of Alive &amp; Well isn&apos;t connected to its database yet. Add the Supabase
