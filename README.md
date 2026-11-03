@@ -29,7 +29,7 @@ Text and email alerts come in Phase 3. Until then the app says plainly that help
    ```
 
    Set the subject of both to "Your Alive & Well sign-in code".
-4. **Copy the keys into the app.** Copy `.env.example` to `.env.local`. From **Project Settings > API Keys**, paste the project URL and the **publishable** key. Never put the secret key in the app.
+4. **The app's keys.** The project URL and **publishable** key are in `.env`, committed with the code. To use a different Supabase project, put its values in a `.env.local` file (see `.env.example`), which overrides `.env`. Never put the secret key in the app.
 
 Signing in by text message also needs Supabase connected to Twilio (**Authentication > Sign In / Providers > Phone**). That's set up in Phase 3; until then, sign in by email.
 

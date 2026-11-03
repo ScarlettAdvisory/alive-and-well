@@ -33,7 +33,7 @@ function RootNavigator() {
         <Label variant="title">Almost ready</Label>
         <Label>
           This copy of Alive &amp; Well isn&apos;t connected to its database yet. Add the Supabase
-          URL and publishable key to the .env.local file, then restart the app.
+          URL and publishable key to the .env file, then restart the app.
         </Label>
       </Screen>
     );
