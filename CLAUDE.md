@@ -17,7 +17,7 @@ Senior check-in app: scheduled check-ins, a big "I'm OK" button, an "I need help
 
 ## Stack
 
-- Expo SDK 57 (not 58: its `@expo/cli` wasn't published when the project started), Expo Router, TypeScript. One codebase for iPhone, Android and web (`web.output: "single"`).
+- Expo SDK 58, Expo Router, TypeScript. Keep the SDK current: the App Store's Expo Go only opens the newest SDK. One codebase for iPhone, Android and web (`web.output: "single"`).
 - Supabase (Canadian region) for auth (one-time codes by email or phone), database and the scheduled missed-check-in job.
 - Twilio for SMS, Resend for email from alerts@seniorsalive.ca, Expo push notifications for reminders.
 
