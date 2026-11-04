@@ -7,7 +7,7 @@ Senior check-in app: scheduled check-ins, a big "I'm OK" button, an "I need help
 ## Where things are
 
 - `PLAN.md`: the full plan for the standalone app (features, stack, costs, build phases, store/privacy/safety rules). Read it before starting new work.
-- `README.md`: Supabase setup steps and how to run the app.
+- `README.md`: Supabase setup steps, how to run the app and how to ship to TestFlight (`eas.json`).
 - `prototype/index.html`: the original Claude-hosted version, exported from claude.ai. It's the reference for screens, wording and behaviour. It depends on the claude.ai artifact runtime (`claude.use("db")`, `claude.use("mcp")`, `claude.use("user")`), so it won't run standalone.
 - `src/app/`: screens. `sign-in.tsx` is public; everything in `(app)/` needs a session (`Stack.Protected` in `src/app/_layout.tsx`). Inside, `(app)/_layout.tsx` shows `welcome.tsx` until the user is in a circle, then `(tabs)/` (Check in/Today, People, Schedule, History) plus modal forms (`contact/[id]`, `schedule/[id]`, `invite`, `senior`).
 - `src/lib/supabase.ts`: the Supabase client. `src/lib/auth.tsx`: session context (`useAuth`). `src/lib/circle.tsx`: loads the user's senior, contacts, schedules, check-ins and circle (`useCircle`), refreshing every minute and on focus; call `refresh()` after any write.
@@ -34,6 +34,7 @@ Senior check-in app: scheduled check-ins, a big "I'm OK" button, an "I need help
 - `schedules`: `time_of_day` in the senior's timezone, frequency daily/weekdays/weekends/weekly, `day_of_week` 0=Sunday.
 - `circle_invites`: one-time 8-character codes (expire in 7 days) made with `create_invite(senior_id, role)` and redeemed with `accept_invite(code)`, which raises `PT404` (HTTP 404) for a bad code. `circle_people(senior_id)` lists names and roles in a circle.
 - `profiles.display_name`: the user's first name, asked on the welcome screen.
+- `delete_account()` RPC: deletes the caller's auth user (cascading profile and memberships) and any senior whose circle would be left empty. Reached from People > Delete my account (`(app)/account.tsx`).
 - `checkins`: the app may only insert `ok`/`need_help`; a trigger forces `occurred_at`, `created_by` and `alert_state='pending'`. Rows are never updated or deleted by the app. The alert job (service role) records `no_response` rows, at most one per schedule occurrence, and updates alert fields.
 
 ## Behaviour to keep from the prototype

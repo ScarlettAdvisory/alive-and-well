@@ -45,9 +45,11 @@ describe('time zones', () => {
   test('wall-clock time to instant, summer and winter', () => {
     assert.equal(zonedTimeToDate(2026, 7, 1, 9, 0, TO).toISOString(), '2026-07-01T13:00:00.000Z');
     assert.equal(zonedTimeToDate(2026, 12, 1, 9, 0, TO).toISOString(), '2026-12-01T14:00:00.000Z');
+    // B.C. stopped changing clocks in 2026 and stays on UTC-7 all year
+    // (tzdata 2026b), so 9 a.m. in Vancouver in December is 16:00 UTC.
     assert.equal(
       zonedTimeToDate(2026, 12, 1, 9, 0, 'America/Vancouver').toISOString(),
-      '2026-12-01T17:00:00.000Z',
+      '2026-12-01T16:00:00.000Z',
     );
   });
 

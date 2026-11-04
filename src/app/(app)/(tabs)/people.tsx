@@ -87,6 +87,7 @@ export default function PeopleScreen() {
             await supabase.auth.signOut();
           }}
         />
+        <Button title="Delete my account" kind="plain" onPress={() => router.push('/account')} />
       </Card>
     </Screen>
   );

@@ -38,6 +38,7 @@ function CircleGate() {
         <Stack.Screen name="schedule/[id]" options={{ presentation: 'modal' }} />
         <Stack.Screen name="invite" options={{ presentation: 'modal' }} />
         <Stack.Screen name="senior" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="account" options={{ presentation: 'modal' }} />
       </Stack.Protected>
       <Stack.Protected guard={!ready}>
         <Stack.Screen name="welcome" />

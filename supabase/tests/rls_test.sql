@@ -247,5 +247,60 @@ do $$ begin
   end if;
 end $$;
 
+-- Account deletion. Margaret leaves a shared circle: her account goes, but
+-- Margaret's check-ins stay for Alice.
+reset role;
+select pg_temp.act_as('00000000-0000-0000-0000-00000000000c');
+select public.delete_account();
+reset role;
+do $$ begin
+  if exists (select 1 from auth.users where id = '00000000-0000-0000-0000-00000000000c') then
+    raise exception 'FAIL: Margaret''s sign-in was not deleted';
+  end if;
+  if exists (select 1 from public.profiles where id = '00000000-0000-0000-0000-00000000000c') then
+    raise exception 'FAIL: Margaret''s profile was not deleted';
+  end if;
+  if exists (select 1 from public.circle_members where user_id = '00000000-0000-0000-0000-00000000000c') then
+    raise exception 'FAIL: Margaret is still in a circle';
+  end if;
+  if not exists (select 1 from public.seniors where id = current_setting('test.margaret')::uuid) then
+    raise exception 'FAIL: a senior still shared with Alice was deleted';
+  end if;
+  if not exists (select 1 from public.checkins where senior_id = current_setting('test.margaret')::uuid) then
+    raise exception 'FAIL: Alice lost Margaret''s check-ins';
+  end if;
+end $$;
+
+-- Bob is alone in Walter's circle, so Walter and everything about him go too.
+select pg_temp.act_as('00000000-0000-0000-0000-00000000000b');
+select public.delete_account();
+reset role;
+do $$ begin
+  if exists (select 1 from auth.users where id = '00000000-0000-0000-0000-00000000000b') then
+    raise exception 'FAIL: Bob''s sign-in was not deleted';
+  end if;
+  if exists (select 1 from public.seniors where id = current_setting('test.walter')::uuid) then
+    raise exception 'FAIL: Walter was left behind with no one in his circle';
+  end if;
+  if exists (select 1 from public.checkins where senior_id = current_setting('test.walter')::uuid)
+     or exists (select 1 from public.schedules where senior_id = current_setting('test.walter')::uuid)
+     or exists (select 1 from public.contacts where senior_id = current_setting('test.walter')::uuid) then
+    raise exception 'FAIL: Walter''s data was left behind';
+  end if;
+  if not exists (select 1 from auth.users where id = '00000000-0000-0000-0000-00000000000a') then
+    raise exception 'FAIL: deleting Bob touched Alice';
+  end if;
+end $$;
+
+-- Signed-out visitors can't call it.
+set role anon;
+do $$ begin
+  begin
+    perform public.delete_account();
+    raise exception 'FAIL: anon called delete_account';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
 reset role;
 \echo 'All RLS tests passed.'
