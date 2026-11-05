@@ -26,9 +26,11 @@ begin
   end if;
 end $$;
 
+-- Alerts start from now: nothing saved while they were off is sent. If they
+-- are already on (re-running with a new key), the start time stays as it is.
 update public.alert_settings
-set email_live = true,
-    live_since = coalesce(live_since, now()),
+set live_since = case when email_live or sms_live then coalesce(live_since, now()) else now() end,
+    email_live = true,
     updated_at = now();
 
 -- Every minute. Re-running replaces the existing job of the same name.
@@ -45,13 +47,16 @@ select public.alert_status() as alerts_now_on;
 --
 --   select public.send_test_alert('you@example.com', '+16135550123');
 --
--- To see how recent sends went (accepted, or failed with Bird's reason):
+-- To see anything that didn't go through in the last week (and job errors):
 --
---   select public.reconcile_alert_deliveries();
---   select created_at, channel, destination, status, http_status, error
+--   select * from public.alert_problems();
+--
+-- To see the most recent sends:
+--
+--   select created_at, channel, destination, status, attempts, http_status, error
 --   from public.alert_deliveries order by created_at desc limit 20;
 --
 -- To switch alerts off:
 --
---   update public.alert_settings set email_live = false, sms_live = false;
+--   update public.alert_settings set email_live = false, sms_live = false, live_since = null;
 --   select cron.unschedule('alive-and-well-alerts');
