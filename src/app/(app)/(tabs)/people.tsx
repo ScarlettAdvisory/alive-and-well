@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 
 import { Button, Card, Label, Row, Screen } from '@/components/ui';
-import { ALERTS_LIVE } from '@/constants/features';
+import { alertGap, alertsLive, alertWords } from '@/lib/alerts';
 import { useAuth } from '@/lib/auth';
 import { useCircle } from '@/lib/circle';
 import { timeZoneName } from '@/lib/format';
@@ -11,7 +11,7 @@ import { supabase } from '@/lib/supabase';
 
 export default function PeopleScreen() {
   const { session } = useAuth();
-  const { senior, contacts, people, refresh } = useCircle();
+  const { senior, contacts, people, alerts, refresh } = useCircle();
   const [signingOut, setSigningOut] = useState(false);
   const me = session?.user.email || (session?.user.phone ? formatPhone('+' + session.user.phone.replace(/^\+/, '')) : '');
 
@@ -33,8 +33,9 @@ export default function PeopleScreen() {
       <Card>
         <Label variant="heading">Family &amp; friends to alert</Label>
         <Label variant="small">
-          {ALERTS_LIVE
-            ? `Everyone here is alerted when a check-in is missed or ${senior.first_name} asks for help. Routine "I'm OK" messages go only to people who turn them on.`
+          {alertsLive(alerts)
+            ? `Everyone here gets ${alertWords(alerts)} when a check-in is missed or ${senior.first_name} asks for help. Routine "I'm OK" emails go only to people who turn them on.` +
+              (alerts.sms ? '' : ' Texts aren’t switched on yet, so only people with an email address are alerted.')
             : `These are the people who will get texts and emails when alerts are switched on. Phone numbers here also appear as call buttons on ${senior.first_name}'s screen.`}
         </Label>
         {contacts.length === 0 ? (
@@ -47,6 +48,7 @@ export default function PeopleScreen() {
               lines={[
                 [x.relationship, x.phone && formatPhone(x.phone), x.email].filter(Boolean).join(' · '),
                 x.notify_on_checkin ? 'Gets every check-in' : 'Alerts only',
+                alertGap(x, alerts),
               ]}
               right={<Label variant="small">Edit</Label>}
               hint={`Change or remove ${x.name}`}

@@ -12,14 +12,15 @@ Senior check-in app: scheduled check-ins, a big "I'm OK" button, an "I need help
 - `src/app/`: screens. `sign-in.tsx` is public; everything in `(app)/` needs a session (`Stack.Protected` in `src/app/_layout.tsx`). Inside, `(app)/_layout.tsx` shows `welcome.tsx` until the user is in a circle, then `(tabs)/` (Check in/Today, People, Schedule, History) plus modal forms (`contact/[id]`, `schedule/[id]`, `invite`, `senior`).
 - `src/lib/supabase.ts`: the Supabase client. `src/lib/auth.tsx`: session context (`useAuth`). `src/lib/circle.tsx`: loads the user's senior, contacts, schedules, check-ins and circle (`useCircle`), refreshing every minute and on focus; call `refresh()` after any write.
 - `src/lib/schedule.ts`: check-in timing in the senior's time zone (ported from the prototype). `src/lib/format.ts`: display formatting. Both have no imports so `npm test` runs them under plain Node.
-- `src/constants/features.ts`: `ALERTS_LIVE`. While false, all wording must say help requests and missed check-ins are only visible in the app.
-- `supabase/migrations/`: schema and RLS. `supabase/tests/rls_test.sql`: RLS tests run by `npm run test:db`.
+- `src/lib/alerts.ts`: what the app may say about alerts, from the server's `alert_status()` (loaded into `useCircle().alerts`). While alerts are off, all wording must say help requests and missed check-ins are only visible in the app. Only promise alerts to contacts `canAlert()` reaches.
+- `supabase/migrations/`: schema, RLS and the alert job. `supabase/tests/`: `rls_test.sql` and `alerts_test.sql`, run by `npm run test:db` against stubs of pg_net and Vault (`supabase_stub.sql`).
+- `supabase/setup/turn_on_alerts.sql`: run once in the SQL Editor with the Bird API key to switch alerts on.
 
 ## Stack
 
 - Expo SDK 58, Expo Router, TypeScript. Keep the SDK current: the App Store's Expo Go only opens the newest SDK. One codebase for iPhone, Android and web (`web.output: "single"`).
 - Supabase (Canadian region) for auth (one-time codes by email or phone), database and the scheduled missed-check-in job.
-- Twilio for SMS, Resend for email from alerts@seniorsalive.ca, Expo push notifications for reminders.
+- Bird (bird.com) for alert texts and for email from alerts@seniorsalive.ca (DNS at IONOS). Expo push notifications for reminders (not built yet).
 
 ## Commands
 
@@ -35,7 +36,8 @@ Senior check-in app: scheduled check-ins, a big "I'm OK" button, an "I need help
 - `circle_invites`: one-time 8-character codes (expire in 7 days) made with `create_invite(senior_id, role)` and redeemed with `accept_invite(code)`, which raises `PT404` (HTTP 404) for a bad code. `circle_people(senior_id)` lists names and roles in a circle.
 - `profiles.display_name`: the user's first name, asked on the welcome screen.
 - `delete_account()` RPC: deletes the caller's auth user (cascading profile and memberships) and any senior whose circle would be left empty. Reached from People > Delete my account (`(app)/account.tsx`).
-- `checkins`: the app may only insert `ok`/`need_help`; a trigger forces `occurred_at`, `created_by` and `alert_state='pending'`. Rows are never updated or deleted by the app. The alert job (service role) records `no_response` rows, at most one per schedule occurrence, and updates alert fields.
+- Alerts (`20261105000000_alerts.sql`): pg_cron runs `process_alerts()` every minute. It records `no_response` check-ins an hour after a time with no response from 2 hours before to 4 hours after, then sends pending alerts through Bird's API with pg_net (key in Vault as `bird_api_key`) and logs each message in `alert_deliveries`, filled in from `net._http_response` on the next run. `alert_settings` (one row, no RLS access) holds the sender address, texting number and `email_live`/`sms_live`; nothing before `live_since` is alerted. Times in messages use `alert_time()`, which ends in "a.m.", so don't add a period after it.
+- `checkins`: the app may only insert `ok`/`need_help`; a trigger forces `occurred_at`, `created_by` and `alert_state='pending'`. Rows are never updated or deleted by the app. The alert job (runs as postgres, exempt from that trigger like the service role) records `no_response` rows, at most one per schedule occurrence, and updates alert fields.
 
 ## Behaviour to keep from the prototype
 

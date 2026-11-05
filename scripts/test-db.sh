@@ -29,4 +29,6 @@ PSQL=(psql -X -q -v ON_ERROR_STOP=1 -h /tmp -p "$PORT" -U postgres -d postgres)
 for f in "$ROOT"/supabase/migrations/*.sql; do
   "${PSQL[@]}" -f "$f"
 done
-"${PSQL[@]}" -f "$ROOT/supabase/tests/rls_test.sql"
+for f in "$ROOT/supabase/tests/rls_test.sql" "$ROOT/supabase/tests/alerts_test.sql"; do
+  "${PSQL[@]}" -f "$f"
+done

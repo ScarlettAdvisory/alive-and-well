@@ -40,7 +40,7 @@ Version 1 does the core job well for one senior and their family; everything els
 
 One codebase builds the iPhone app, the Android app and the web version, all talking to a Supabase backend that does the alert work.
 
-The apps are built with React Native and Expo, written once in TypeScript. The senior's check-ins and the family's settings go into the database. The missed check-in job and the help alert send texts, emails and reminders through Twilio (SMS), Resend (email) and Expo push notifications. seniorsalive.ca hosts the web version, the privacy policy and the alert email address.
+The apps are built with React Native and Expo, written once in TypeScript. The senior's check-ins and the family's settings go into the database. The missed check-in job and the help alert send texts, emails and reminders through Bird (SMS and email) and Expo push notifications. seniorsalive.ca hosts the web version, the privacy policy and the alert email address.
 
 ## Services and monthly costs
 
@@ -49,8 +49,7 @@ Running version 1 for one family costs about US$28 a month, almost all of it the
 | Service | Job in the app | Plan | Cost (USD) |
 |---|---|---|---|
 | [Supabase](https://supabase.com/pricing) | Accounts, database, alert checks every few minutes | Pro | $25/month |
-| [Twilio](https://www.twilio.com/en-us/sms/pricing/ca) | Text messages to family | Pay as you go | $1.15/month for a Canadian number, plus about $0.015 per text with carrier fees |
-| [Resend](https://resend.com/pricing) | Alert emails from alerts@seniorsalive.ca | Free | $0 up to 3,000 emails a month (100 a day) |
+| [Bird](https://bird.com/pricing/sms/ca) | Text messages and alert emails from alerts@seniorsalive.ca | Pay as you go | $0.95/month for a Canadian number (billed yearly), plus about $0.0035 per text plus carrier fees; see Bird's email pricing for email |
 | [Expo](https://expo.dev/pricing) | Builds the iPhone and Android apps | Free | $0 for up to 15 builds per platform a month |
 | [Expo push notifications](https://docs.expo.dev/push-notifications/faq/) | Check-in reminders on the senior's phone | Included | $0 |
 | Web hosting | seniorsalive.ca web version | Free tier (approximate) | $0 |
@@ -65,7 +64,7 @@ Working a few hours a week, expect roughly 8 to 12 weeks from first code to both
 
 1. **Foundations (weeks 1–2):** set up Supabase, the database tables (seniors, contacts, schedules, check-ins), and sign-in with one-time codes. Ends with an empty app you can sign in to on your own phone.
 2. **Check-in app (weeks 3–4):** the senior's screen, the family view, and contact and schedule settings. Ends with check-ins saved and visible to family.
-3. **Alerts (weeks 5–6):** the server job that finds missed check-ins every few minutes, instant help alerts, texts through Twilio, emails through Resend from seniorsalive.ca, and push reminders. Ends with a full test where a missed check-in texts your own phone.
+3. **Alerts (weeks 5–6):** the server job that finds missed check-ins every few minutes, instant help alerts, texts and emails through Bird from seniorsalive.ca, and push reminders. Ends with a full test where a missed check-in texts your own phone.
 4. **Family trial (weeks 7–8):** your parent and family use it daily alongside the current Claude version. Fix what confuses them, especially text size and button placement.
 5. **Store launch (weeks 9–12):** privacy policy and support page on seniorsalive.ca, App Store screenshots and review, Google Play's closed test and review. Ends with the app listed in both stores.
 

@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
+import { alertGap, alertWords, canAlert, getsRoutine, type AlertContact } from './alerts.ts';
 import { formatTimeOfDay, frequencyLabel, listNames, tidy } from './format.ts';
 import {
   currentOccurrence,
@@ -183,5 +184,37 @@ describe('phones and emails', () => {
     assert.equal(normalizeEmail('alice@'), null);
     assert.deepEqual(parseSignInTarget('613.555.0123'), { kind: 'phone', phone: '+16135550123' });
     assert.equal(parseSignInTarget('not an email'), null);
+  });
+});
+
+describe('alerts', () => {
+  const both = { email: true, sms: true };
+  const emailOnly = { email: true, sms: false };
+  const off = { email: false, sms: false };
+  const ann: AlertContact = { email: 'a@x.ca', phone: '+16135550101', notify_on_checkin: true, sms_consent_at: '2026-11-01' };
+  const cal: AlertContact = { email: null, phone: '+16135550103', notify_on_checkin: true, sms_consent_at: null };
+  const ben: AlertContact = { email: 'b@x.ca', phone: null, notify_on_checkin: false, sms_consent_at: null };
+
+  test('who gets alerts', () => {
+    assert.equal(canAlert(ann, both), true);
+    assert.equal(canAlert(cal, both), false);
+    assert.equal(canAlert({ ...cal, sms_consent_at: '2026-11-01' }, both), true);
+    assert.equal(canAlert({ ...cal, sms_consent_at: '2026-11-01' }, emailOnly), false);
+    assert.equal(canAlert(ann, off), false);
+  });
+
+  test('routine "I\'m OK" is email only, for people who want it', () => {
+    assert.equal(getsRoutine(ann, both), true);
+    assert.equal(getsRoutine(ben, both), false);
+    assert.equal(getsRoutine({ ...ann, email: null }, both), false);
+  });
+
+  test('wording', () => {
+    assert.equal(alertWords(both), 'a text or email');
+    assert.equal(alertWords(emailOnly), 'an email');
+    assert.equal(alertGap(ann, both), null);
+    assert.equal(alertGap(cal, off), null);
+    assert.match(alertGap(cal, emailOnly) ?? '', /texts aren’t on yet/);
+    assert.match(alertGap(cal, both) ?? '', /haven’t agreed/);
   });
 });

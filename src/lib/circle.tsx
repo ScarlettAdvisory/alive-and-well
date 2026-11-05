@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { AppState } from 'react-native';
 
+import { ALERTS_OFF, type AlertStatus } from '@/lib/alerts';
 import { useAuth } from '@/lib/auth';
 import type { Checkin, Schedule } from '@/lib/schedule';
 import { supabase } from '@/lib/supabase';
@@ -25,6 +26,7 @@ export type Contact = {
   email: string | null;
   phone: string | null;
   notify_on_checkin: boolean;
+  sms_consent_at: string | null;
 };
 
 export type Person = { user_id: string; role: Role; display_name: string | null; is_me: boolean };
@@ -36,6 +38,8 @@ export type CircleData = {
   schedules: Schedule[];
   checkins: Checkin[];
   people: Person[];
+  /** Whether alert emails and texts are switched on (decided by the server). */
+  alerts: AlertStatus;
 };
 
 type CircleState =
@@ -122,10 +126,10 @@ async function loadCircle(userId: string): Promise<CircleState> {
   if (!membership) return { status: 'none' };
 
   const senior = membership.senior as unknown as Senior;
-  const [contacts, schedules, checkins, people] = await Promise.all([
+  const [contacts, schedules, checkins, people, alerts] = await Promise.all([
     supabase
       .from('contacts')
-      .select('id, name, relationship, email, phone, notify_on_checkin')
+      .select('id, name, relationship, email, phone, notify_on_checkin, sms_consent_at')
       .eq('senior_id', senior.id)
       .order('name'),
     supabase
@@ -140,6 +144,7 @@ async function loadCircle(userId: string): Promise<CircleState> {
       .order('occurred_at', { ascending: false })
       .limit(HISTORY_LIMIT),
     supabase.rpc('circle_people', { p_senior_id: senior.id }),
+    supabase.rpc('alert_status'),
   ]);
   for (const r of [contacts, schedules, checkins, people]) if (r.error) throw r.error;
 
@@ -151,6 +156,8 @@ async function loadCircle(userId: string): Promise<CircleState> {
     schedules: (schedules.data ?? []) as Schedule[],
     checkins: (checkins.data ?? []) as Checkin[],
     people: (people.data ?? []) as Person[],
+    // If this can't be read, say alerts are off: never promise more than is sent.
+    alerts: alerts.error || !alerts.data ? ALERTS_OFF : { ...ALERTS_OFF, ...(alerts.data as AlertStatus) },
   };
 }
 

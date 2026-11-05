@@ -18,6 +18,7 @@ Text and email alerts come in Phase 3. Until then the app says plainly that help
    - `20261015000000_initial_schema.sql` (Phase 1)
    - `20261016000000_invites.sql` (Phase 2: invite codes)
    - `20261104000000_delete_account.sql` (account deletion, needed for the App Store)
+   - `20261105000000_alerts.sql` (Phase 3: the alert job)
 
    Each file only needs to be run once. When a later phase adds a new file, run just that one.
 3. **Make sign-in emails show a code.** Supabase's emails contain a link by default; this app needs the code instead. Go to **Authentication > Emails**. In both the **Magic Link** and **Confirm signup** templates, replace the body with something like:
@@ -32,9 +33,9 @@ Text and email alerts come in Phase 3. Until then the app says plainly that help
    Set the subject of both to "Your Alive & Well sign-in code".
 4. **The app's keys.** The project URL and **publishable** key are in `.env`, committed with the code. To use a different Supabase project, put its values in a `.env.local` file (see `.env.example`), which overrides `.env`. Never put the secret key in the app.
 
-Signing in by text message also needs Supabase connected to Twilio (**Authentication > Sign In / Providers > Phone**). That's set up in Phase 3; until then, sign in by email.
+Signing in by text message also needs Supabase connected to an SMS provider (**Authentication > Sign In / Providers > Phone**). That isn't set up yet, so sign in by email.
 
-Supabase's built-in email sender only sends a few emails an hour. That's enough for testing; Phase 3 switches to Resend for real use.
+Supabase's built-in email sender only sends a few emails an hour. That's enough for testing; before launch, sign-in codes should go through a custom email sender (**Authentication > Emails > SMTP Settings**). Alert emails don't use this; they go through Bird.
 
 ## Run the app
 
@@ -46,6 +47,18 @@ npx expo start
 ```
 
 Then scan the QR code with the Camera app (iPhone) or the Expo Go app (Android), or press `w` to open the web version.
+
+## Switch on alerts
+
+Alerts are sent through [Bird](https://bird.com): email from alerts@seniorsalive.ca, and texts from a Canadian number.
+
+1. **Email domain.** seniorsalive.ca is added in Bird. Its DNS records (a DKIM `TXT`, a `send` `CNAME` and a `_dmarc` `TXT`) go in IONOS under Domains & SSL > seniorsalive.ca > DNS. Don't add Bird's optional MX records, which would redirect incoming mail.
+2. **API key.** In Bird, go to Platform tools > API keys and create a key that can send email and SMS.
+3. **Turn on.** Run the migration above, then open `supabase/setup/turn_on_alerts.sql`, put the key in place of `PASTE_YOUR_BIRD_API_KEY_HERE` and run it in the SQL Editor. That stores the key in Vault, switches on email alerts and starts the every-minute job.
+4. **Test.** Run `select public.send_test_alert('you@example.com');` and check your inbox. The end of `turn_on_alerts.sql` shows how to see each send's result.
+5. **Texts (later).** Once the Bird number is approved, run the `sms_from` line at the end of `turn_on_alerts.sql`. Contacts only get texts once someone ticks "has agreed to get alert texts" on their contact screen.
+
+The app reads whether alerts are on from the server, so its wording changes as soon as they're switched on, with no new build needed.
 
 ## Put it on iPhones with TestFlight
 

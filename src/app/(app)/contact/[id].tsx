@@ -16,6 +16,8 @@ export default function ContactForm() {
   const [email, setEmail] = useState(existing?.email ?? '');
   const [phone, setPhone] = useState(existing?.phone ? formatPhone(existing.phone) : '');
   const [notify, setNotify] = useState(existing?.notify_on_checkin ?? true);
+  // Texts need the person's agreement (Canada's anti-spam law, and courtesy).
+  const [smsOk, setSmsOk] = useState(!!existing?.sms_consent_at);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -43,6 +45,8 @@ export default function ContactForm() {
       email: cleanEmail,
       phone: cleanPhone,
       notify_on_checkin: notify,
+      // Keep the original date they agreed; clear it if they no longer do.
+      sms_consent_at: cleanPhone && smsOk ? (existing?.sms_consent_at ?? new Date().toISOString()) : null,
     };
     setBusy(true);
     const { error } = existing
@@ -91,8 +95,15 @@ export default function ContactForm() {
         autoCorrect={false}
         autoComplete="email"
       />
+      {phone.trim() ? (
+        <Toggle
+          label={`${name.trim() || 'This person'} has agreed to get alert texts from Alive & Well`}
+          value={smsOk}
+          onChange={setSmsOk}
+        />
+      ) : null}
       <Toggle
-        label={`Also tell them every time ${senior.first_name} says "I'm OK"`}
+        label={`Also email them every time ${senior.first_name} says "I'm OK"`}
         value={notify}
         onChange={setNotify}
       />

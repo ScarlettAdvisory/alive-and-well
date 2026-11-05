@@ -4,9 +4,9 @@ import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { TodayList } from '@/components/today';
 import { Button, Card, Field, Label, Message, Screen } from '@/components/ui';
-import { ALERTS_LIVE } from '@/constants/features';
 import { FontSize, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { alertsLive, alertWords, canAlert, getsRoutine } from '@/lib/alerts';
 import { useCircle, type CircleData } from '@/lib/circle';
 import {
   deviceTimeZone,
@@ -68,8 +68,9 @@ type Stage = 'ask' | 'confirm' | 'ok' | 'help';
 
 function CheckInView({ circle, now, occurrences }: ViewProps) {
   const c = useTheme();
-  const { senior, checkins, contacts, refresh } = circle;
+  const { senior, checkins, contacts, alerts, refresh } = circle;
   const tz = senior.timezone;
+  const live = alertsLive(alerts);
   const [stage, setStage] = useState<Stage>('ask');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -103,7 +104,8 @@ function CheckInView({ circle, now, occurrences }: ViewProps) {
   }
 
   const hour = zonedParts(now, tz).hour;
-  const routine = contacts.filter((x) => x.notify_on_checkin);
+  const routine = contacts.filter((x) => getsRoutine(x, alerts));
+  const reachable = contacts.filter((x) => canAlert(x, alerts));
 
   return (
     <Screen onRefresh={refresh}>
@@ -156,10 +158,10 @@ function CheckInView({ circle, now, occurrences }: ViewProps) {
         <Card tone="help">
           <Label variant="heading">Ask for help?</Label>
           <Label>
-            {ALERTS_LIVE
-              ? contacts.length
-                ? `We'll alert ${listNames(contacts.map((x) => x.name))} right away.`
-                : 'No one is listed under People yet, so no one can be alerted. Please call 911 or a family member.'
+            {live
+              ? reachable.length
+                ? `We'll send ${listNames(reachable.map((x) => x.name))} ${alertWords(alerts)} now. If you need help right away, also call 911 or a family member.`
+                : 'No one under People can get alerts yet, so no one will be told. Please call 911 or a family member.'
               : "Your family will see this in the app. It doesn't send them a text or email yet, so if you need help now, call 911 or phone a family member."}
           </Label>
           <Button title="Yes, I need help" kind="danger" onPress={() => save('need_help')} busy={busy} />
@@ -174,8 +176,8 @@ function CheckInView({ circle, now, occurrences }: ViewProps) {
           <Label>
             {tidy(
               `Saved at ${savedAt ? formatTime(savedAt, tz) : ''}. ` +
-                (ALERTS_LIVE && routine.length
-                  ? `${listNames(routine.map((x) => x.name))} will get a message.`
+                (routine.length
+                  ? `${listNames(routine.map((x) => x.name))} will get an email.`
                   : 'Your family can see it in the app.'),
             )}
           </Label>
@@ -187,8 +189,8 @@ function CheckInView({ circle, now, occurrences }: ViewProps) {
         <Card tone="help">
           <Label variant="heading">Your help request is saved.</Label>
           <Label>
-            {ALERTS_LIVE
-              ? "We're alerting your family now."
+            {live && reachable.length
+              ? `We're sending ${listNames(reachable.map((x) => x.name))} ${alertWords(alerts)} now.`
               : 'Your family can see it in the app, but it has not been sent to them.'}{' '}
             If you need help now, call 911 or phone a family member below.
           </Label>
@@ -251,7 +253,7 @@ function Emergency({ contacts }: { contacts: CircleData['contacts'] }) {
 // ---------------------------------------------------------------------------
 
 function FamilyView({ circle, now, occurrences }: ViewProps) {
-  const { senior, checkins, schedules, refresh } = circle;
+  const { senior, checkins, schedules, alerts, refresh } = circle;
   const tz = senior.timezone;
   const name = senior.first_name;
   const today = zonedParts(now, tz);
@@ -321,7 +323,7 @@ function FamilyView({ circle, now, occurrences }: ViewProps) {
         hasSchedules={schedules.length > 0}
       />
 
-      {!ALERTS_LIVE ? (
+      {!alertsLive(alerts) ? (
         <Label variant="small">
           Text and email alerts aren&apos;t switched on yet, so check this screen to see how {name} is
           doing. It updates every minute.

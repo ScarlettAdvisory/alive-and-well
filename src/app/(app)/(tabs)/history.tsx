@@ -2,12 +2,12 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 
 import { Card, Label, Pill, Row, Screen } from '@/components/ui';
-import { ALERTS_LIVE } from '@/constants/features';
+import { alertsLive, alertWords } from '@/lib/alerts';
 import { useCircle } from '@/lib/circle';
 import { formatDateTime, formatTime } from '@/lib/format';
 
 export default function HistoryScreen() {
-  const { senior, checkins, refresh } = useCircle();
+  const { senior, checkins, alerts, refresh } = useCircle();
   const tz = senior.timezone;
   useFocusEffect(
     useCallback(() => {
@@ -49,8 +49,8 @@ export default function HistoryScreen() {
       <Card tone="sunk">
         <Label variant="heading">How alerts work</Label>
         <Label>
-          {ALERTS_LIVE
-            ? 'If a check-in is missed or help is asked for, everyone under People gets a text or email.'
+          {alertsLive(alerts)
+            ? `If ${senior.first_name} asks for help, or hasn't checked in an hour after a check-in time, everyone under People who can be reached gets ${alertWords(alerts)}, usually within a few minutes. Delivery depends on phone and email services, so it isn't guaranteed. In an emergency, call 911.`
             : "Text and email alerts aren't switched on yet. For now, family can see every check-in and help request here and on the Today screen. In an emergency, call 911."}
         </Label>
       </Card>
