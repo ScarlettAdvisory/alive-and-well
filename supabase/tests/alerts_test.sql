@@ -56,7 +56,7 @@ insert into vault.decrypted_secrets values ('bird_api_key', 'bk_us1_testkey');
 
 -- Not switched on: nothing happens.
 do $$ begin
-  if public.process_alerts('2026-11-05 10:30-05') <> '{"live": false}'::jsonb then
+  if public.process_alerts('2026-11-05 10:30-05') ->> 'live' <> 'false' then
     perform pg_temp.fail('ran before alerts were switched on');
   end if;
   if pg_temp.requests() <> 0 then perform pg_temp.fail('sent before alerts were switched on'); end if;

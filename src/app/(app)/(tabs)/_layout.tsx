@@ -3,11 +3,13 @@ import { Tabs } from 'expo-router/tabs';
 import { FontSize } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useCircle } from '@/lib/circle';
+import { useReminderTaps } from '@/lib/notifications';
 
 // Labels only, in large type: clearer for older eyes than small icons.
 export default function TabsLayout() {
   const c = useTheme();
   const { role } = useCircle();
+  useReminderTaps();
   return (
     <Tabs
       screenOptions={{

@@ -1,4 +1,4 @@
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -8,6 +8,12 @@ import { FontSize, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { alertsLive, alertWords, canAlert, getsRoutine } from '@/lib/alerts';
 import { useCircle, type CircleData } from '@/lib/circle';
+import {
+  askForReminders,
+  registerForReminders,
+  reminderPermission,
+  type ReminderPermission,
+} from '@/lib/notifications';
 import {
   deviceTimeZone,
   formatDay,
@@ -76,6 +82,14 @@ function CheckInView({ circle, now, occurrences }: ViewProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+
+  // Opened from a check-in reminder: show the two buttons, with fresh data.
+  const { reminder } = useLocalSearchParams<{ reminder?: string }>();
+  useEffect(() => {
+    if (!reminder) return;
+    setStage('ask');
+    refresh();
+  }, [reminder, refresh]);
 
   async function save(status: 'ok' | 'need_help') {
     setBusy(true);
@@ -206,8 +220,61 @@ function CheckInView({ circle, now, occurrences }: ViewProps) {
         hasSchedules={circle.schedules.length > 0}
       />
 
+      <ReminderSetup seniorId={senior.id} hasSchedules={circle.schedules.length > 0} />
+
       <Emergency contacts={contacts} />
     </Screen>
+  );
+}
+
+/**
+ * Asks once to allow check-in reminders, and keeps this phone registered for
+ * them. Shows nothing once they're on.
+ */
+function ReminderSetup({ seniorId, hasSchedules }: { seniorId: string; hasSchedules: boolean }) {
+  const [permission, setPermission] = useState<ReminderPermission | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    reminderPermission().then((p) => {
+      if (live) setPermission(p);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (permission === 'granted') registerForReminders(seniorId);
+  }, [permission, seniorId]);
+
+  if (!hasSchedules || permission === null || permission === 'granted' || permission === 'unsupported') {
+    return null;
+  }
+  if (permission === 'denied') {
+    return (
+      <Card tone="sunk">
+        <Label variant="heading">Check-in reminders are off</Label>
+        <Label>
+          To get a reminder on this phone at each check-in time, allow notifications for Alive
+          &amp; Well in your phone&apos;s Settings.
+        </Label>
+        <Button title="Open Settings" kind="plain" onPress={() => Linking.openSettings()} />
+      </Card>
+    );
+  }
+  return (
+    <Card>
+      <Label variant="heading">Get a reminder at check-in time?</Label>
+      <Label>
+        This phone can remind you at each check-in time. Tap the reminder to check in. When your
+        phone asks, choose Allow.
+      </Label>
+      <Button
+        title="Turn on reminders"
+        onPress={async () => setPermission(await askForReminders())}
+      />
+    </Card>
   );
 }
 

@@ -14,13 +14,14 @@ Senior check-in app: scheduled check-ins, a big "I'm OK" button, an "I need help
 - `src/lib/schedule.ts`: check-in timing in the senior's time zone (ported from the prototype). `src/lib/format.ts`: display formatting. Both have no imports so `npm test` runs them under plain Node.
 - `src/lib/alerts.ts`: what the app may say about alerts, from the server's `alert_status()` (loaded into `useCircle().alerts`). While alerts are off, all wording must say help requests and missed check-ins are only visible in the app. Only promise alerts to contacts `canAlert()` reaches.
 - `supabase/migrations/`: schema, RLS and the alert job. `supabase/tests/`: `rls_test.sql` and `alerts_test.sql`, run by `npm run test:db` against stubs of pg_net and Vault (`supabase_stub.sql`).
+- `src/lib/notifications.ts`: check-in reminders (expo-notifications). The senior's check-in screen asks permission (`ReminderSetup` in `(tabs)/index.tsx`) and registers the phone with `register_push_device()`; a tapped reminder opens `/?reminder=…`, which resets the screen to the two buttons. Sign-out calls `forgetThisDevice()`.
 - `supabase/setup/turn_on_alerts.sql`: run once in the SQL Editor with the Bird API key to switch alerts on.
 
 ## Stack
 
 - Expo SDK 58, Expo Router, TypeScript. Keep the SDK current: the App Store's Expo Go only opens the newest SDK. One codebase for iPhone, Android and web (`web.output: "single"`).
 - Supabase (Canadian region) for auth (one-time codes by email or phone), database and the scheduled missed-check-in job.
-- Bird (bird.com) for alert texts and for email from alerts@seniorsalive.ca (DNS at IONOS). Expo push notifications for reminders (not built yet).
+- Bird (bird.com) for alert texts and for email from alerts@seniorsalive.ca (DNS at IONOS). Expo push notifications for check-in reminders.
 
 ## Commands
 
@@ -37,6 +38,7 @@ Senior check-in app: scheduled check-ins, a big "I'm OK" button, an "I need help
 - `profiles.display_name`: the user's first name, asked on the welcome screen.
 - `delete_account()` RPC: deletes the caller's auth user (cascading profile and memberships) and any senior whose circle would be left empty. Reached from People > Delete my account (`(app)/account.tsx`).
 - Alerts (`20261105000000_alerts.sql`): pg_cron runs `process_alerts()` every minute. It records `no_response` check-ins an hour after a time with no response from 2 hours before to 4 hours after, then sends pending alerts through Bird's API with pg_net (key in Vault as `bird_api_key`) and logs each message in `alert_deliveries`, filled in from `net._http_response` on the next run. `alert_settings` (one row, no RLS access) holds the sender address, texting number and `email_live`/`sms_live`; nothing before `live_since` is alerted. Times in messages use `alert_time()`, which ends in "a.m.", so don't add a period after it.
+- Reminders (`20261109000000_reminders.sql`): `send_checkin_reminders()` runs first in `process_alerts()`, even while alerts are off. It sends an Expo push at each check-in time and a nudge 30 minutes later (each only within 10 minutes of its time, once, and only if the senior hasn't checked in since 2 hours before) to `push_devices` of members whose role is senior. Logged in `checkin_reminders`; Expo's `DeviceNotRegistered` answers delete the token. `alert_settings.reminders_live` switches them off.
 - `checkins`: the app may only insert `ok`/`need_help`; a trigger forces `occurred_at`, `created_by` and `alert_state='pending'`. Rows are never updated or deleted by the app. The alert job (runs as postgres, exempt from that trigger like the service role) records `no_response` rows, at most one per schedule occurrence, and updates alert fields.
 
 ## Behaviour to keep from the prototype

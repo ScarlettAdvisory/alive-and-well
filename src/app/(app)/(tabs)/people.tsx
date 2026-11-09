@@ -6,6 +6,7 @@ import { alertGap, alertsLive, alertWords } from '@/lib/alerts';
 import { useAuth } from '@/lib/auth';
 import { useCircle } from '@/lib/circle';
 import { timeZoneName } from '@/lib/format';
+import { forgetThisDevice } from '@/lib/notifications';
 import { formatPhone } from '@/lib/sign-in-target';
 import { supabase } from '@/lib/supabase';
 
@@ -86,6 +87,8 @@ export default function PeopleScreen() {
           busy={signingOut}
           onPress={async () => {
             setSigningOut(true);
+            // So a reminder for this senior doesn't reach whoever signs in next.
+            await forgetThisDevice().catch(() => {});
             await supabase.auth.signOut();
           }}
         />
