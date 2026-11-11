@@ -30,8 +30,9 @@ create function auth.role() returns text language sql stable as $$
 $$;
 
 grant usage on schema public to anon, authenticated, service_role;
-alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
-alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+-- Since October 30, 2026 Supabase no longer grants new tables to the API
+-- roles by default, so neither does this stub: every table needs the explicit
+-- grants in 20261111010000_explicit_grants.sql.
 
 -- pg_net: requests are logged instead of sent; tests write responses into
 -- net._http_response themselves.

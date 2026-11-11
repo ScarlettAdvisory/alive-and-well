@@ -52,11 +52,18 @@ do $$ begin
     raise exception 'FAIL: app inserted a no_response check-in';
   exception when insufficient_privilege then null;
   end;
-  update public.checkins set status = 'need_help';
+  -- Refused outright (no update/delete grant), or at least changes nothing.
+  begin
+    update public.checkins set status = 'need_help';
+  exception when insufficient_privilege then null;
+  end;
   if exists (select 1 from public.checkins where status = 'need_help') then
     raise exception 'FAIL: app updated a check-in';
   end if;
-  delete from public.checkins;
+  begin
+    delete from public.checkins;
+  exception when insufficient_privilege then null;
+  end;
   if not exists (select 1 from public.checkins) then
     raise exception 'FAIL: app deleted a check-in';
   end if;
@@ -128,9 +135,13 @@ reset role;
 select set_config('request.jwt.claims', '{"role":"anon"}', false);
 set role anon;
 do $$ begin
-  if exists (select 1 from public.seniors) or exists (select 1 from public.checkins) then
-    raise exception 'FAIL: anon can read data';
-  end if;
+  -- Refused outright (no grant to anon), or at least sees nothing.
+  begin
+    if exists (select 1 from public.seniors) or exists (select 1 from public.checkins) then
+      raise exception 'FAIL: anon can read data';
+    end if;
+  exception when insufficient_privilege then null;
+  end;
   begin
     perform public.create_senior('X', 'America/Toronto', 'family');
     raise exception 'FAIL: anon created a senior';

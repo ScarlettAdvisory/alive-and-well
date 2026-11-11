@@ -51,6 +51,8 @@ Senior check-in app: scheduled check-ins, a big "I'm OK" button, an "I need help
 
 ## Gotchas
 
+- Supabase stopped auto-granting new `public` tables to the API roles on 2026-10-30. Every new table needs explicit grants (see `20261111010000_explicit_grants.sql`); the test stub doesn't auto-grant either, so a missing grant fails `npm run test:db`.
+
 - The React Compiler is on. It can evaluate property reads inside callbacks while memoising, so never write `maybeUndefined!.id` in a handler; guard with `if (!x) return` first.
 - Times use `en-CA` formatting ("9:00 a.m."); wrap sentences that end with a time in `tidy()` to avoid "a.m..".
 - No native date picker: times are picked with `Choices` chips so it works the same on iOS, Android and web.
