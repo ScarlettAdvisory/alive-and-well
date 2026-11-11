@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
+import { HELP_TYPES, helpLabel } from './help.ts';
 import { alertGap, alertWords, canAlert, getsRoutine, type AlertContact } from './alerts.ts';
 import { formatTimeOfDay, frequencyLabel, listNames, tidy } from './format.ts';
 import {
@@ -216,5 +217,14 @@ describe('alerts', () => {
     assert.equal(alertGap(cal, off), null);
     assert.match(alertGap(cal, emailOnly) ?? '', /texts aren’t on yet/);
     assert.match(alertGap(cal, both) ?? '', /haven’t agreed/);
+  });
+});
+
+describe('help choices', () => {
+  test('labels match the alert wording, and Other names nothing', () => {
+    assert.deepEqual(HELP_TYPES.map((h) => h.type), ['doctor', 'supplies', 'transport', 'personal_care', 'other']);
+    assert.equal(helpLabel('transport'), 'I need transport');
+    assert.equal(helpLabel('other'), null);
+    assert.equal(helpLabel(null), null);
   });
 });

@@ -25,6 +25,8 @@ export type Checkin = {
   schedule_id: string | null;
   scheduled_for: string | null;
   message: string | null;
+  /** For a help request: what kind of help (see help.ts). */
+  help_type?: string | null;
 };
 
 const HOUR = 3600e3;

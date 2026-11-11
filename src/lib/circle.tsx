@@ -139,7 +139,7 @@ async function loadCircle(userId: string): Promise<CircleState> {
       .order('time_of_day'),
     supabase
       .from('checkins')
-      .select('id, status, occurred_at, schedule_id, scheduled_for, message')
+      .select('id, status, occurred_at, schedule_id, scheduled_for, message, help_type')
       .eq('senior_id', senior.id)
       .order('occurred_at', { ascending: false })
       .limit(HISTORY_LIMIT),

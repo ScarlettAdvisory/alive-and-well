@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { Card, Label, Pill, Row, Screen } from '@/components/ui';
 import { alertsLive, alertWords } from '@/lib/alerts';
 import { useCircle } from '@/lib/circle';
+import { helpLabel } from '@/lib/help';
 import { formatDateTime, formatTime } from '@/lib/format';
 
 export default function HistoryScreen() {
@@ -37,6 +38,7 @@ export default function HistoryScreen() {
                 key={x.id}
                 title={formatDateTime(when, tz)}
                 lines={[
+                  x.status === 'need_help' && helpLabel(x.help_type),
                   x.message && `“${x.message}”`,
                   x.status === 'no_response' && `No check-in by ${formatTime(new Date(x.occurred_at), tz)}`,
                 ]}

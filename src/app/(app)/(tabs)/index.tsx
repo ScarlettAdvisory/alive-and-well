@@ -8,6 +8,7 @@ import { FontSize, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { alertsLive, alertWords, canAlert, getsRoutine } from '@/lib/alerts';
 import { useCircle, type CircleData } from '@/lib/circle';
+import { HELP_TYPES, helpLabel, type HelpType } from '@/lib/help';
 import {
   askForReminders,
   registerForReminders,
@@ -70,7 +71,7 @@ type ViewProps = {
 // The senior's screen
 // ---------------------------------------------------------------------------
 
-type Stage = 'ask' | 'confirm' | 'ok' | 'help';
+type Stage = 'ask' | 'confirm' | 'other' | 'ok' | 'help';
 
 function CheckInView({ circle, now, occurrences }: ViewProps) {
   const c = useTheme();
@@ -91,7 +92,7 @@ function CheckInView({ circle, now, occurrences }: ViewProps) {
     refresh();
   }, [reminder, refresh]);
 
-  async function save(status: 'ok' | 'need_help') {
+  async function save(status: 'ok' | 'need_help', helpType: HelpType | null = null) {
     setBusy(true);
     setError('');
     const o = currentOccurrence(occurrences, new Date());
@@ -99,6 +100,7 @@ function CheckInView({ circle, now, occurrences }: ViewProps) {
       senior_id: senior.id,
       status,
       message: note.trim() || null,
+      help_type: status === 'need_help' ? helpType : null,
       schedule_id: o?.schedule.id ?? null,
       scheduled_for: o?.at.toISOString() ?? null,
     });
@@ -170,7 +172,7 @@ function CheckInView({ circle, now, occurrences }: ViewProps) {
 
       {stage === 'confirm' ? (
         <Card tone="help">
-          <Label variant="heading">Ask for help?</Label>
+          <Label variant="heading">What do you need?</Label>
           <Label>
             {live
               ? reachable.length
@@ -178,8 +180,38 @@ function CheckInView({ circle, now, occurrences }: ViewProps) {
                 : 'No one under People can get alerts yet, so no one will be told. Please call 911 or a family member.'
               : "Your family will see this in the app. It doesn't send them a text or email yet, so if you need help now, call 911 or phone a family member."}
           </Label>
-          <Button title="Yes, I need help" kind="danger" onPress={() => save('need_help')} busy={busy} />
+          {HELP_TYPES.map((h) => (
+            <Button
+              key={h.type}
+              title={h.label}
+              kind="danger"
+              disabled={busy}
+              onPress={() => (h.type === 'other' ? setStage('other') : save('need_help', h.type))}
+            />
+          ))}
           <Button title="Cancel" kind="plain" onPress={() => setStage('ask')} disabled={busy} />
+          <Message text={error} />
+        </Card>
+      ) : null}
+
+      {stage === 'other' ? (
+        <Card tone="help">
+          <Label variant="heading">What do you need?</Label>
+          <Field
+            label="Tell your family (optional)"
+            placeholder="For example: the furnace isn't working"
+            value={note}
+            onChangeText={setNote}
+            multiline
+            maxLength={1000}
+          />
+          <Button
+            title="Send help request"
+            kind="danger"
+            onPress={() => save('need_help', 'other')}
+            busy={busy}
+          />
+          <Button title="Back" kind="plain" onPress={() => setStage('confirm')} disabled={busy} />
           <Message text={error} />
         </Card>
       ) : null}
@@ -341,7 +373,8 @@ function FamilyView({ circle, now, occurrences }: ViewProps) {
   let headline: string;
   if (help) {
     tone = 'help';
-    headline = `${name} asked for help at ${formatTime(new Date(help.occurred_at), tz)}.`;
+    const what = helpLabel(help.help_type);
+    headline = `${name} asked for help at ${formatTime(new Date(help.occurred_at), tz)}${what ? `: “${what}”` : '.'}`;
   } else if (overdue && (!latest || new Date(latest.occurred_at) < overdue.o.at)) {
     tone = 'late';
     headline = `${name} hasn't checked in for the ${overdue.o.schedule.label.toLowerCase()} (${formatTime(overdue.o.at, tz)}).`;
